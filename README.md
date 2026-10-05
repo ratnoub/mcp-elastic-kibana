@@ -13,6 +13,9 @@ untuk operasi cluster, index, dan document.
 └── src/
     └── mcp_elastic_kibana/
         ├── __init__.py
+        ├── __main__.py
+        ├── cli.py
+        ├── daemon.py
         └── server.py
 ```
 
@@ -45,44 +48,59 @@ kibana:
 pipx install .
 ```
 
-Lalu jalankan:
-
-```bash
-mcp-elastic-kibana            # transport stdio (default)
-mcp-elastic-kibana --transport http --port 8000
-```
-
 ### Opsi 2 — virtualenv
 
 ```bash
 python -m venv .venv
 .venv\Scripts\activate        # Windows
 pip install .
-mcp-elastic-kibana
 ```
+
+## Menjalankan
+
+Default: transport **http** di `0.0.0.0:5755`, endpoint MCP di `http://IP:5755/mcp`.
+
+```bash
+mcp-elastic-kibana                          # http di 0.0.0.0:5755 (foreground)
+mcp-elastic-kibana --port 9000              # http di port lain
+mcp-elastic-kibana --transport stdio        # transport stdio
+```
+
+### Daemon (background)
+
+```bash
+mcp-elastic-kibana --daemon                 # jalankan di background
+mcp-elastic-kibana --status                 # cek status (PID, port, URL, log)
+mcp-elastic-kibana --stop                   # hentikan daemon
+```
+
+File daemon disimpan di `~/.config/mcp-elastic-kibana/`:
+
+- `daemon.pid` — PID proses background
+- `daemon.log` — output server
 
 ## Registrasi di MCP client
 
-Contoh (Claude Desktop / VS Code / Copilot CLI):
+Endpoint HTTP (setelah daemon/foreground berjalan):
 
 ```json
 {
   "mcpServers": {
     "mcp-elastic-kibana": {
-      "command": "mcp-elastic-kibana"
+      "url": "http://<ip-server>:5755/mcp"
     }
   }
 }
 ```
 
-Jika tidak diinstal via pipx, gunakan path python + modul:
+Atau via stdio (client menjalankan prosesnya sendiri):
 
 ```json
 {
   "mcpServers": {
     "mcp-elastic-kibana": {
-      "command": "D:\\venv\\mcp-elastic-kibana\\Scripts\\python.exe",
-      "args": ["-m", "mcp_elastic_kibana.server"]
+      "command": "mcp-elastic-kibana",
+      "args": ["--transport", "stdio"]
     }
   }
 }

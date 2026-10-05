@@ -27,7 +27,7 @@ dependencies = [
 ]
 
 [project.scripts]
-mcp-elastic-kibana = "mcp_elastic_kibana.server:main"
+mcp-elastic-kibana = "mcp_elastic_kibana.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

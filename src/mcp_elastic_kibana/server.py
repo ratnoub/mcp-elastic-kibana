@@ -8,7 +8,6 @@ urutan pencarian:
   4. ./config.yaml (direktori kerja saat ini)
 """
 
-import argparse
 import json
 import os
 from pathlib import Path
@@ -287,31 +286,20 @@ async def es_delete_document(index: str, doc_id: str) -> str:
 
 
 # ---------------------------------------------------------------------------
-# Entry point
+# Jalankan server
 # ---------------------------------------------------------------------------
 
+DEFAULT_HOST = "0.0.0.0"
+DEFAULT_PORT = 5755
 
-def main() -> None:
-    """Console entry point: `mcp-elastic-kibana`."""
-    parser = argparse.ArgumentParser(
-        prog="mcp-elastic-kibana",
-        description="MCP server (FastMCP) untuk Elasticsearch.",
-    )
-    parser.add_argument(
-        "--transport",
-        choices=["stdio", "http"],
-        default="stdio",
-        help="Transport MCP (default: stdio)",
-    )
-    parser.add_argument("--host", default="127.0.0.1", help="Host untuk transport http")
-    parser.add_argument("--port", type=int, default=8000, help="Port untuk transport http")
-    args = parser.parse_args()
 
-    if args.transport == "http":
-        mcp.run(transport="http", host=args.host, port=args.port)
+def run_server(
+    transport: str = "http",
+    host: str = DEFAULT_HOST,
+    port: int = DEFAULT_PORT,
+) -> None:
+    """Jalankan MCP server dengan transport yang dipilih."""
+    if transport == "http":
+        mcp.run(transport="http", host=host, port=port)
     else:
         mcp.run()
-
-
-if __name__ == "__main__":
-    main()
