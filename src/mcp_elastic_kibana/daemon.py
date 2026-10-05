@@ -64,7 +64,7 @@ def port_open(port: int) -> bool:
         return s.connect_ex(("127.0.0.1", port)) == 0
 
 
-def start_daemon(host: str, port: int) -> int:
+def start_daemon(host: str, port: int, config_path: Optional[str] = None) -> int:
     """Jalankan server sebagai proses background terdetach. Kembalikan PID."""
     existing = read_pid()
     if existing is not None:
@@ -81,6 +81,8 @@ def start_daemon(host: str, port: int) -> int:
         "--host", host,
         "--port", str(port),
     ]
+    if config_path:
+        cmd += ["--config", config_path]
     kwargs: dict = dict(
         stdin=subprocess.DEVNULL,
         stdout=log,

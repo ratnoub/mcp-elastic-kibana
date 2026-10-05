@@ -34,6 +34,11 @@ def main() -> None:
         help=f"Port untuk transport http (default: {DEFAULT_PORT})",
     )
     parser.add_argument(
+        "--config",
+        default=None,
+        help="Path ke file config.yaml (memilih file config yang dipakai)",
+    )
+    parser.add_argument(
         "--daemon",
         action="store_true",
         help="Jalankan server di background (daemon)",
@@ -72,7 +77,7 @@ def main() -> None:
 
     if args.daemon:
         try:
-            pid = daemon.start_daemon(args.host, args.port)
+            pid = daemon.start_daemon(args.host, args.port, config_path=args.config)
         except RuntimeError as e:
             print(f"Error: {e}", file=sys.stderr)
             sys.exit(1)
@@ -82,7 +87,8 @@ def main() -> None:
         print("Hentikan dengan: mcp-elastic-kibana --stop")
         return
 
-    run_server(transport=args.transport, host=args.host, port=args.port)
+    run_server(transport=args.transport, host=args.host, port=args.port,
+               config_path=args.config)
 
 
 if __name__ == "__main__":

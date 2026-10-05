@@ -24,9 +24,10 @@ untuk operasi cluster, index, document, agregasi, dan ringkasan laporan log ngin
 Server mencari kredensial Elasticsearch dengan urutan:
 
 1. Environment variable `ES_HOST`, `ES_USER`, `ES_PASSWORD`
-2. File yang ditunjuk `MCP_ELASTIC_KIBANA_CONFIG`
-3. `~/.config/mcp-elastic-kibana/config.yaml`
-4. `./config.yaml` (direktori kerja)
+2. File yang ditunjuk argumen `--config` (CLI)
+3. File yang ditunjuk `MCP_ELASTIC_KIBANA_CONFIG`
+4. `~/.config/mcp-elastic-kibana/config.yaml`
+5. `./config.yaml` (direktori kerja)
 
 Format file config (salin dari `config.example.yaml`):
 
@@ -63,6 +64,7 @@ Default: transport **http** di `0.0.0.0:5755`, endpoint MCP di `http://IP:5755/m
 ```bash
 mcp-elastic-kibana                          # http di 0.0.0.0:5755 (foreground)
 mcp-elastic-kibana --port 9000              # http di port lain
+mcp-elastic-kibana --config /path/to/config.yaml   # pakai file config tertentu
 mcp-elastic-kibana --transport stdio        # transport stdio
 ```
 
@@ -70,6 +72,7 @@ mcp-elastic-kibana --transport stdio        # transport stdio
 
 ```bash
 mcp-elastic-kibana --daemon                 # jalankan di background
+mcp-elastic-kibana --daemon --config /path/to/config.yaml   # background + config tertentu
 mcp-elastic-kibana --status                 # cek status (PID, port, URL, log)
 mcp-elastic-kibana --stop                   # hentikan daemon
 ```

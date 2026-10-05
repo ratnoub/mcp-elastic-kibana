@@ -3,13 +3,15 @@
 Membaca konfigurasi (host, user, password) dari file config.yaml dengan
 urutan pencarian:
   1. Environment variable ES_HOST / ES_USER / ES_PASSWORD
-  2. File yang ditunjuk environment variable MCP_ELASTIC_KIBANA_CONFIG
-  3. ~/.config/mcp-elastic-kibana/config.yaml
-  4. ./config.yaml (direktori kerja saat ini)
+  2. File yang ditunjuk argumen --config (CLI)
+  3. File yang ditunjuk environment variable MCP_ELASTIC_KIBANA_CONFIG
+  4. ~/.config/mcp-elastic-kibana/config.yaml
+  5. ./config.yaml (direktori kerja saat ini)
 """
 
 import json
 import os
+import sys
 from pathlib import Path
 from typing import Any, Optional
 
@@ -27,8 +29,13 @@ from fastmcp import FastMCP
 # ---------------------------------------------------------------------------
 
 
-def _find_config_file() -> Optional[Path]:
+def _find_config_file(explicit_path: Optional[str] = None) -> Optional[Path]:
     """Cari file config.yaml sesuai urutan prioritas."""
+    if explicit_path:
+        p = Path(explicit_path)
+        if p.exists():
+            return p
+        raise FileNotFoundError(f"File config tidak ditemukan: {explicit_path}")
     env_path = os.environ.get("MCP_ELASTIC_KIBANA_CONFIG")
     if env_path:
         p = Path(env_path)
@@ -43,10 +50,10 @@ def _find_config_file() -> Optional[Path]:
     return None
 
 
-def _load_config() -> dict:
+def _load_config(config_path: Optional[str] = None) -> dict:
     """Muat konfigurasi; environment variable selalu menang atas file."""
     file_cfg: dict = {}
-    cfg_file = _find_config_file()
+    cfg_file = _find_config_file(config_path)
     if cfg_file is not None:
         with open(cfg_file, "r", encoding="utf-8") as f:
             data = yaml.safe_load(f) or {}
@@ -58,15 +65,27 @@ def _load_config() -> dict:
     }
 
 
-_config = _load_config()
-
-ES = Elasticsearch(
-    _config["host"],
-    basic_auth=(_config["user"], _config["password"]) if _config["user"] else None,
-    request_timeout=30,
-)
+_config: Optional[dict] = None
+ES: Optional[Elasticsearch] = None
 
 mcp = FastMCP("mcp-elastic-kibana")
+
+
+def _init_client(config_path: Optional[str] = None) -> None:
+    """Inisialisasi client Elasticsearch (lazy, sekali saja).
+
+    Dipanggil oleh run_server sebelum server dijalankan, sehingga
+    argumen --config bisa menentukan file config yang dipakai.
+    """
+    global _config, ES
+    if ES is not None:
+        return
+    _config = _load_config(config_path)
+    ES = Elasticsearch(
+        _config["host"],
+        basic_auth=(_config["user"], _config["password"]) if _config["user"] else None,
+        request_timeout=30,
+    )
 
 
 def _json(data: Any) -> str:
@@ -374,8 +393,10 @@ def run_server(
     transport: str = "http",
     host: str = DEFAULT_HOST,
     port: int = DEFAULT_PORT,
+    config_path: Optional[str] = None,
 ) -> None:
     """Jalankan MCP server dengan transport yang dipilih."""
+    _init_client(config_path)
     if transport == "http":
         mcp.run(transport="http", host=host, port=port)
     else:
