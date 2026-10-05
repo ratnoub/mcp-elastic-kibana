@@ -269,6 +269,48 @@ async def es_aggregate(
 
 
 @mcp.tool
+async def nginx_log_report(
+    index: str,
+    top_n: int = 10,
+    query: Optional[str] = None,
+) -> str:
+    """Ringkasan lengkap log akses nginx untuk laporan (satu panggilan).
+
+    Mengembalikan sekaligus: total akses, distribusi status HTTP,
+    top kota & negara (GeoIP), top IP, top OS & browser, top URL,
+    distribusi method, persentil waktu respons (p50/p90/p95/p99),
+    status upstream, dan tren per jam.
+
+    Args:
+        index: Nama index (atau wildcard, mis. '7thinn.ub.ac.id-access.log-*').
+        top_n: Jumlah entri untuk setiap daftar "top" (default 10, maks 50).
+        query: JSON string Query DSL untuk memfilter (opsional),
+            mis. '{"range": {"@timestamp": {"gte": "2026-08-01"}}}'.
+    """
+    n = max(1, min(top_n, 50))
+    aggs: dict[str, Any] = {
+        "status": {"terms": {"field": "status", "size": 20}},
+        "kota": {"terms": {"field": "city.keyword", "size": n}},
+        "negara": {"terms": {"field": "country_name.keyword", "size": n}},
+        "top_ip": {"terms": {"field": "remote_addr", "size": n}},
+        "os": {"terms": {"field": "client_device_os.keyword", "size": n}},
+        "browser": {"terms": {"field": "client_device_browser.keyword", "size": n}},
+        "top_url": {"terms": {"field": "request.keyword", "size": n}},
+        "method": {"terms": {"field": "request_method.keyword", "size": 10}},
+        "upstream_status": {"terms": {"field": "upstream_status", "size": 10}},
+        "resp_time": {
+            "percentiles": {"field": "upstream_response_time", "percents": [50, 90, 95, 99]}
+        },
+        "per_jam": {
+            "date_histogram": {"field": "@timestamp", "calendar_interval": "hour"}
+        },
+    }
+    kwargs: dict[str, Any] = {"size": 0, "aggs": aggs}
+    if query:
+        kwargs["query"] = json.loads(query)
+    return _call(ES.search, index=index, **kwargs)
+
+@mcp.tool
 async def es_get_document(index: str, doc_id: str) -> str:
     """Ambil satu dokumen berdasarkan ID.
 

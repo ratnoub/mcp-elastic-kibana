@@ -121,6 +121,7 @@ Atau via stdio (client menjalankan prosesnya sendiri):
 | `es_search` | Search dengan Query DSL (paginasi via `from_`/`size`) |
 | `es_count` | Hitung dokumen yang cocok dengan query |
 | `es_aggregate` | Agregasi (terms, date_histogram, stats) — untuk laporan |
+| `nginx_log_report` | Ringkasan lengkap log nginx dalam 1 panggilan (status, kota, IP, device, URL, method, persentil respons, tren/jam) |
 | `es_get_document` | Ambil dokumen berdasarkan ID |
 | `es_index_document` | Simpan/ganti dokumen |
 | `es_update_document` | Partial update dokumen |
@@ -134,8 +135,13 @@ misalnya:
 > "Buat laporan .docx per index: jumlah akses, distribusi status, top kota,
 > top IP, dan device."
 
-Copilot CLI akan mengambil data via `es_aggregate`/`es_search`/`es_count`,
+Copilot CLI akan mengambil data via `nginx_log_report` (ringkasan lengkap dalam
+satu panggilan) atau `es_aggregate`/`es_search`/`es_count` untuk detail,
 lalu menyusun dokumen .docx (skill `docx`).
+
+`nginx_log_report` mengembalikan sekaligus: total akses, distribusi status,
+top kota & negara, top IP, top OS & browser, top URL, distribusi method,
+status upstream, persentil waktu respons (p50/p90/p95/p99), dan tren per jam.
 
 Catatan field log nginx (sudah ter-enrich GeoIP):
 
@@ -143,6 +149,7 @@ Catatan field log nginx (sudah ter-enrich GeoIP):
 - `remote_addr`, `http_x_forwarded_for` — IP akses
 - `client_device_os`, `client_device_browser`, `http_user_agent` — device
 - `status`, `request_method`, `request`, `body_bytes_sent`, `@timestamp`
+- `upstream_status`, `upstream_response_time` — kinerja backend
 
 Field bertipe `text` (mis. `city`, `status` jika text) perlu suffix `.keyword`
 untuk agregasi terms; field integer (mis. `status` di index ini) langsung.
