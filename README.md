@@ -120,7 +120,29 @@ Atau via stdio (client menjalankan prosesnya sendiri):
 | `es_refresh_index` | Refresh index agar dokumen baru bisa di-search |
 | `es_search` | Search dengan Query DSL (paginasi via `from_`/`size`) |
 | `es_count` | Hitung dokumen yang cocok dengan query |
+| `es_aggregate` | Agregasi (terms, date_histogram, stats) — untuk laporan |
 | `es_get_document` | Ambil dokumen berdasarkan ID |
 | `es_index_document` | Simpan/ganti dokumen |
 | `es_update_document` | Partial update dokumen |
 | `es_delete_document` | Hapus dokumen (destruktif) |
+
+## Membuat laporan
+
+Dengan MCP ini terhubung ke Copilot CLI, Anda bisa meminta laporan per index
+misalnya:
+
+> "Buat laporan .docx per index: jumlah akses, distribusi status, top kota,
+> top IP, dan device."
+
+Copilot CLI akan mengambil data via `es_aggregate`/`es_search`/`es_count`,
+lalu menyusun dokumen .docx (skill `docx`).
+
+Catatan field log nginx (sudah ter-enrich GeoIP):
+
+- `city`, `country_name`, `geoip_city` — lokasi akses
+- `remote_addr`, `http_x_forwarded_for` — IP akses
+- `client_device_os`, `client_device_browser`, `http_user_agent` — device
+- `status`, `request_method`, `request`, `body_bytes_sent`, `@timestamp`
+
+Field bertipe `text` (mis. `city`, `status` jika text) perlu suffix `.keyword`
+untuk agregasi terms; field integer (mis. `status` di index ini) langsung.

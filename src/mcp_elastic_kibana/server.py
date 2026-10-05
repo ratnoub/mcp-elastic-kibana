@@ -82,7 +82,15 @@ def _call(fn, *args, **kwargs) -> str:
     except NotFoundError as e:
         return _json({"error": f"Resource tidak ditemukan: {e.message}"})
     except ApiError as e:
-        return _json({"error": f"Elasticsearch API error {e.status_code}: {e.message}"})
+            detail = ""
+            body = getattr(e, "body", None)
+            if isinstance(body, dict):
+                err = body.get("error", {})
+                if isinstance(err, dict):
+                    root = err.get("root_cause") or [err]
+                    for rc in root[:2]:
+                        detail += f" [{rc.get('type', '?')}: {rc.get('reason', '')}]"
+            return _json({"error": f"Elasticsearch API error {e.status_code}: {e.message}{detail}"})
     except ESConnectionError as e:
         return _json(
             {
@@ -232,6 +240,32 @@ async def es_count(index: str, query: Optional[str] = None) -> str:
     if query:
         kwargs["query"] = json.loads(query)
     return _call(ES.count, index=index, **kwargs)
+
+
+@mcp.tool
+async def es_aggregate(
+    index: str,
+    aggregations: str,
+    query: Optional[str] = None,
+    size: int = 0,
+) -> str:
+    """Jalankan agregasi Elasticsearch (terms, date_histogram, stats, dll).
+
+    Cocok untuk laporan: jumlah akses per kota, top IP, distribusi status,
+    tren per jam/hari, total bytes, dll.
+
+    Args:
+        index: Nama index (atau wildcard, mis. 'nginx-*').
+        aggregations: JSON string agregasi. Contoh:
+            '{"kota": {"terms": {"field": "city", "size": 20}},
+              "per_jam": {"date_histogram": {"field": "@timestamp", "calendar_interval": "hour"}}}'
+        query: JSON string Query DSL untuk memfilter dokumen (opsional).
+        size: Jumlah dokumen yang ikut dikembalikan (default 0, hanya agregasi).
+    """
+    kwargs: dict[str, Any] = {"size": min(size, 100), "aggs": json.loads(aggregations)}
+    if query:
+        kwargs["query"] = json.loads(query)
+    return _call(ES.search, index=index, **kwargs)
 
 
 @mcp.tool
