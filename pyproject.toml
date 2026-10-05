@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mcp-elastic-kibana"
+version = "0.1.0"
+description = "MCP server (FastMCP) untuk terhubung ke Elasticsearch"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+keywords = ["mcp", "elasticsearch", "fastmcp", "kibana"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Database",
+]
+dependencies = [
+    "fastmcp>=2.0",
+    "elasticsearch>=8.9,<9",
+    "PyYAML>=6.0",
+]
+
+[project.scripts]
+mcp-elastic-kibana = "mcp_elastic_kibana.server:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

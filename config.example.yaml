@@ -1,0 +1,7 @@
+# Elasticsearch Configuration
+# Salin file ini ke ~/.config/mcp-elastic-kibana/config.yaml
+# (atau set environment variable ES_HOST, ES_USER, ES_PASSWORD)
+kibana:
+  ES_HOST: http://localhost:9200
+  ES_USER: elastic
+  ES_PASSWORD: your-password-here
