@@ -310,6 +310,7 @@ async def nginx_log_report(
         kwargs["query"] = json.loads(query)
     return _call(ES.search, index=index, **kwargs)
 
+
 @mcp.tool
 async def es_get_document(index: str, doc_id: str) -> str:
     """Ambil satu dokumen berdasarkan ID.

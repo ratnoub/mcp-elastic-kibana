@@ -1,7 +1,7 @@
 # mcp-elastic-kibana
 
-MCP server (FastMCP) untuk terhubung ke Elasticsearch. Menyediakan 14 tools
-untuk operasi cluster, index, dan document.
+MCP server (FastMCP) untuk terhubung ke Elasticsearch. Menyediakan 16 tools
+untuk operasi cluster, index, document, agregasi, dan ringkasan laporan log nginx.
 
 ## Struktur
 
